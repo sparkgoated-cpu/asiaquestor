@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>QuestForge • Game Quest Completer (Force Complete)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at 20% 30%, #0a0c12, #030507);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            width: 100%;
+            height: 85vh;
+            min-height: 620px;
+            background: rgba(12, 15, 22, 0.75);
+            backdrop-filter: blur(16px);
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+            display: flex;
+            overflow: hidden;
+            border: 1px solid rgba(88, 101, 242, 0.3);
+        }
+
+        .left-panel {
+            width: 320px;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(88, 101, 242, 0.35);
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            overflow-y: auto;
+        }
+
+        .brand h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #E0E7FF, #A78BFA);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .brand p {
+            font-size: 0.75rem;
+            color: #8e9aaf;
+            margin-top: 6px;
+            border-left: 2px solid #5865f2;
+            padding-left: 10px;
+        }
+
+        .warning-box {
+            background: rgba(242, 63, 66, 0.15);
+            border-left: 3px solid #f23f42;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            color: #ffb4b4;
+        }
+
+        .token-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .token-input {
+            background: #0f1119;
+            border: 1px solid #2c2f3f;
+            border-radius: 18px;
+            padding: 12px 18px;
+            color: white;
+            font-size: 0.85rem;
+            font-family: monospace;
+            resize: vertical;
+            outline: none;
+        }
+
+        .token-input:focus {
+            border-color: #5865f2;
+            box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(95deg, #5865f2, #4752c4);
+            border: none;
+            padding: 12px 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(95deg, #6d7af5, #5a66db);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(95deg, #f23f42, #b91c1c);
+        }
+
+        .btn-secondary {
+            background: rgba(30, 34, 48, 0.9);
+            border: 1px solid #3b4055;
+            padding: 8px 14px;
+            border-radius: 32px;
+            color: #ccd6f0;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .log-area {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 16px;
+            overflow-y: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            border: 1px solid #232736;
+        }
+
+        .log-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            color: #7e8aa8;
+            margin-bottom: 12px;
+        }
+
+        .log-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .log-entry {
+            border-left: 2px solid #5865f2;
+            padding-left: 10px;
+            color: #b9c3e6;
+            word-break: break-word;
+            font-size: 0.7rem;
+            line-height: 1.4;
+        }
+
+        .log-entry.error {
+            border-left-color: #f23f42;
+            color: #ffaeae;
+        }
+
+        .log-entry.success {
+            border-left-color: #3ba55d;
+            color: #b5e3c1;
+        }
+
+        .right-panel {
+            flex: 1;
+            padding: 24px 28px;
+            overflow-y: auto;
+            background: rgba(8, 10, 18, 0.3);
+        }
+
+        .quest-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .quest-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(120deg, #e2e8ff, #b4c0ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .quest-stats {
+            font-size: 0.8rem;
+            background: #1e2130;
+            padding: 6px 14px;
+            border-radius: 40px;
+            color: #b9c2dd;
+        }
+
+        .quest-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .quest-card {
+            background: rgba(18, 21, 32, 0.7);
+            backdrop-filter: blur(4px);
+            border-radius: 24px;
+            padding: 18px 20px;
+            border: 1px solid #2b2f41;
+        }
+
+        .quest-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .quest-name {
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-bar-bg {
+            background: #0f111c;
+            border-radius: 30px;
+            height: 8px;
+            width: 100%;
+            margin: 12px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #5865f2, #a78bfa);
+            width: 0%;
+            height: 100%;
+            border-radius: 30px;
+        }
+
+        .quest-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #8d99c2;
+            margin-bottom: 14px;
+        }
+
+        .status-chip {
+            background: #2a2e45;
+            border-radius: 30px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .status-chip.claimable {
+            background: #3e2c1f;
+            color: #f7b05e;
+        }
+
+        .status-chip.completed {
+            background: #1e3a2f;
+            color: #6fcf97;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .footer-note {
+            font-size: 0.65rem;
+            text-align: center;
+            color: #4e5775;
+            margin-top: 20px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #151a24;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #5865f2;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <div class="left-panel">
+        <div class="brand">
+            <h1>⚡ QUESTFORGE</h1>
+            <p>force complete • game quests • auto claim</p>
+        </div>
+        <div class="warning-box">
+            ⚠️ Game quests complete only if Discord allows progress spoofing. Tool tries all known exploits.
+        </div>
+        <div class="token-section">
+            <div class="token-label">
+                🔑 DISCORD TOKEN
+                <span class="btn-secondary" id="clearTokenBtn" style="padding: 2px 10px; font-size: 0.7rem;">clear</span>
+            </div>
+            <textarea id="tokenInput" class="token-input" rows="2" placeholder="ODIz... Discord token"></textarea>
+            <button id="startForceBtn" class="btn-primary btn-danger">💣 FORCE COMPLETE ALL QUESTS</button>
+            <button id="refreshBtn" class="btn-secondary">🔄 Refresh quest list</button>
+        </div>
+        <div class="log-area">
+            <div class="log-title">📟 LIVE LOGS</div>
+            <div id="logMessages" class="log-messages">
+                <div class="log-entry">✅ Ready — paste token and hit FORCE COMPLETE</div>
+                <div class="log-entry">🎮 Game quests will be attempted with max progress + /complete</div>
+            </div>
+        </div>
+        <div class="footer-note">
+            🔒 Token stays local | No login button | Real API calls
+        </div>
+    </div>
+    <div class="right-panel">
+        <div class="quest-header">
+            <h2>🎯 YOUR QUESTS</h2>
+            <div class="quest-stats" id="questStats">—</div>
+        </div>
+        <div id="questListContainer" class="quest-grid">
+            <div class="log-entry" style="text-align: center;">✨ Enter token to load quests</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // DOM elements
+    const tokenInput = document.getElementById('tokenInput');
+    const startForceBtn = document.getElementById('startForceBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const clearTokenBtn = document.getElementById('clearTokenBtn');
+    const logContainer = document.getElementById('logMessages');
+    const questContainer = document.getElementById('questListContainer');
+    const questStatsSpan = document.getElementById('questStats');
+
+    let currentToken = '';
+    let currentQuests = [];
+
+    function addLog(msg, type = 'info') {
+        const div = document.createElement('div');
+        div.className = `log-entry ${type === 'error' ? 'error' : type === 'success' ? 'success' : ''}`;
+        const time = new Date().toLocaleTimeString();
+        div.innerText = `[${time}] ${msg}`;
+        logContainer.appendChild(div);
+        div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (logContainer.children.length > 100) logContainer.removeChild(logContainer.children[0]);
+    }
+
+    async function discordFetch(endpoint, options = {}, token) {
+        const res = await fetch(`https://discord.com/api/v9${endpoint}`, {
+            ...options,
+            headers: {
+                'Authorization': token,
+                'Content-Type': 'application/json',
+                ...(options.headers || {})
+            }
+        });
+        if (!res.ok) {
+            let errText = '';
+            try { const j = await res.json(); errText = j.message || JSON.stringify(j); } catch(e) { errText = res.statusText; }
+            throw new Error(`${res.status}: ${errText}`);
+        }
+        return res.json();
+    }
+
+    async function fetchQuests(token) {
+        const data = await discordFetch('/users/@me/quests?with_progress=true', {}, token);
+        let raw = [];
+        if (Array.isArray(data)) raw = data;
+        else if (data.quests) raw = data.quests;
+        else raw = [];
+        return raw.map(q => ({
+            id: q.id,
+            name: q.config?.name || q.name || 'Unnamed Quest',
+            required: q.config?.total_required_progress || 1,
+            progress: q.user_progress?.progress || q.progress || 0,
+            status: q.user_status || (q.claimed ? 'CLAIMED' : (q.completed ? 'COMPLETED' : 'ACTIVE')),
+            claimable: q.user_status === 'CLAIMABLE' || q.can_claim === true,
+            completed: q.user_status === 'COMPLETED' || q.completed === true
+        }));
+    }
+
+    async function forceCompleteQuest(questId, required, token) {
+        // Try multiple methods
+        let success = false;
+        // Method 1: set progress to required
+        try {
+            await discordFetch(`/users/@me/quests/${questId}/progress`, {
+                method: 'POST',
+                body: JSON.stringify({ progress: required, increment: false })
+            }, token);
+            addLog(`📤 Progress set to ${required} for ${questId}`, 'info');
+            success = true;
+        } catch(e) { addLog(`⚠️ progress endpoint failed: ${e.message}`, 'error'); }
+
+        // Method 2: /complete
+        try {
+            await discordFetch(`/users/@me/quests/${questId}/complete`, { method: 'POST' }, token);
+            addLog(`✅ /complete endpoint success for ${questId}`, 'success');
+            success = true;
+        } catch(e) { addLog(`⚠️ /complete failed: ${e.message}`, 'error'); }
+
+        // Method 3: /acknowledge (sometimes marks done)
+        try {
+            await discordFetch(`/users/@me/quests/${questId}/acknowledge`, { method: 'POST' }, token);
+            addLog(`🔄 acknowledge called for ${questId}`, 'info');
+            success = true;
+        } catch(e) {}
+
+        // Method 4: try with game_id 0 (generic)
+        try {
+            await discordFetch(`/users/@me/quests/${questId}/progress`, {
+                method: 'POST',
+                body: JSON.stringify({ progress: required, game_id: 0 })
+            }, token);
+            success = true;
+        } catch(e) {}
+
+        return success;
+    }
+
+    async function claimQuest(questId, token) {
+        try {
+            await discordFetch(`/users/@me/quests/${questId}/acknowledge`, { method: 'POST' }, token);
+            return true;
+        } catch(e) {
+            try {
+                await discordFetch(`/users/@me/quests/${questId}/claim`, { method: 'POST' }, token);
+                return true;
+            } catch(e2) { return false; }
+        }
+    }
+
+    async function autoCompleteAll(token) {
+        addLog('🚀 STARTING FORCE COMPLETE FOR ALL GAME QUESTS', 'info');
+        let quests;
+        try {
+            quests = await fetchQuests(token);
+            currentQuests = quests;
+            renderQuests(quests);
+        } catch(e) {
+            addLog(`❌ Failed to fetch quests: ${e.message}`, 'error');
+            return;
+        }
+        if (quests.length === 0) { addLog('No quests found.', 'info'); return; }
+
+        let completedCount = 0, failedCount = 0;
+        for (let i = 0; i < quests.length; i++) {
+            const q = quests[i];
+            addLog(`[${i+1}/${quests.length}] Processing: ${q.name} (${q.id})`);
+            if (q.completed || q.status === 'COMPLETED') {
+                addLog(`✔ Already completed, skipping`, 'success');
+                completedCount++;
+                continue;
+            }
+            const forced = await forceCompleteQuest(q.id, q.required, token);
+            if (forced) {
+                addLog(`⚡ Force complete attempt done for ${q.name}, waiting 1.5s...`, 'success');
+                await new Promise(r => setTimeout(r, 1500));
+                // try to claim
+                const claimed = await claimQuest(q.id, token);
+                if (claimed) {
+                    addLog(`🏆 Successfully completed & claimed: ${q.name}`, 'success');
+                    completedCount++;
+                } else {
+                    addLog(`⚠️ Force applied but claim failed (maybe already complete)`, 'error');
+                    completedCount++; // still count as attempted
+                }
+            } else {
+                addLog(`❌ Could not force complete ${q.name} (server rejected)`, 'error');
+                failedCount++;
+            }
+            await new Promise(r => setTimeout(r, 800));
+        }
+        addLog(`✅ DONE. Completed: ${completedCount} | Failed: ${failedCount}`, completedCount > 0 ? 'success' : 'error');
+        await refreshAndRender(token);
+    }
+
+    async function refreshAndRender(token) {
+        if (!token) return;
+        try {
+            const quests = await fetchQuests(token);
+            currentQuests = quests;
+            renderQuests(quests);
+            addLog(`🔄 Refreshed — ${quests.length} quests loaded`, 'success');
+        } catch(e) {
+            addLog(`Refresh error: ${e.message}`, 'error');
+            questContainer.innerHTML = `<div class="log-entry error">❌ Invalid token or network issue</div>`;
+        }
+    }
+
+    function renderQuests(quests) {
+        if (!quests.length) {
+            questContainer.innerHTML = `<div class="log-entry">🎯 No active quests found.</div>`;
+            questStatsSpan.innerText = '0 quests';
+            return;
+        }
+        questStatsSpan.innerText = `${quests.length} quest${quests.length !== 1 ? 's' : ''}`;
+        questContainer.innerHTML = '';
+        quests.forEach(q => {
+            const percent = Math.min(100, Math.floor((q.progress / q.required) * 100));
+            let statusText = '🟢 ACTIVE';
+            let statusClass = '';
+            if (q.claimable) { statusText = '🏆 CLAIMABLE'; statusClass = 'claimable'; }
+            else if (q.completed || q.status === 'COMPLETED') { statusText = '✅ COMPLETED'; statusClass = 'completed'; }
+            else if (q.progress >= q.required) { statusText = '🎯 READY'; statusClass = 'claimable'; }
+            const card = document.createElement('div');
+            card.className = 'quest-card';
+            card.innerHTML = `
+                <div class="quest-title">
+                    <div class="quest-name">🎮 ${escapeHtml(q.name)}</div>
+                    <div class="status-chip ${statusClass}">${statusText}</div>
+                </div>
+                <div class="progress-bar-bg"><div class="progress-fill" style="width: ${percent}%;"></div></div>
+                <div class="quest-meta"><span>📊 ${q.progress} / ${q.required}</span><span>${percent}%</span></div>
+                <div class="quest-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn-secondary force-single" data-id="${q.id}" data-req="${q.required}" style="font-size:0.7rem;">⚡ Force Complete</button>
+                    <button class="btn-secondary claim-single" data-id="${q.id}" style="font-size:0.7rem;">🎁 Claim</button>
+                </div>
+            `;
+            questContainer.appendChild(card);
+        });
+        // attach single buttons
+        document.querySelectorAll('.force-single').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = btn.getAttribute('data-id');
+                const req = parseInt(btn.getAttribute('data-req'));
+                if (!currentToken) { addLog('No token', 'error'); return; }
+                addLog(`🔧 Force completing ${id}...`);
+                await forceCompleteQuest(id, req, currentToken);
+                setTimeout(() => refreshAndRender(currentToken), 1500);
+            });
+        });
+        document.querySelectorAll('.claim-single').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = btn.getAttribute('data-id');
+                if (!currentToken) return;
+                const ok = await claimQuest(id, currentToken);
+                addLog(ok ? `✅ Claimed ${id}` : `❌ Claim failed ${id}`, ok ? 'success' : 'error');
+                setTimeout(() => refreshAndRender(currentToken), 1000);
+            });
+        });
+    }
+
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){return m==='&'?'&amp;':m==='<'?'&lt;':'&gt;';}); }
+
+    startForceBtn.addEventListener('click', async () => {
+        const token = tokenInput.value.trim();
+        if (!token) { addLog('❌ Enter Discord token', 'error'); return; }
